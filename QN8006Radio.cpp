@@ -14,29 +14,32 @@ QN8006Radio::QN8006Radio() {
  * Initiate receive mode
  */
 void QN8006Radio::initReceive(byte s_t, byte mode) {
-    byte buf_1[4];
+	int buf_1Size = 4;
+    byte buf_1[buf_1Size];
     buf_1[0] = 0x00; // Register `SYSTEM1` with address `00h`
     buf_1[1] = 0b10000001; // Enter Receiving mode. CH is determined by the content in CH[9:0].
     if (mode) buf_1[2] = 0b00001011; // Set STEREO & set IDLE to infinity (never go to Standby)
     else buf_1[2] = 0b00011011; // Set MONO & set IDLE to infinity (never go to Standby)
     if (s_t > 31)   buf_1[3] = 0b10101010;  //b7 = 1: RX CCA threshold MSB. See CCA register 19h [4:0].
     else buf_1[3] = 0b00101010;  // b7 = 0: RX CCA threshold MSB. See CCA register 19h [4:0].
-    sendData(buf_1);
+	sendData(buf_1, buf_1Size);
 
-    byte buf_2[2];
+	int buf_2Size = 2;
+    byte buf_2[buf_2Size];
     buf_2[0] = 0x19; // Register `CCA` with address `19h` // start subaddress  CCA threshold
     buf_2[1] = (s_t & 0b00011111) | 0b01000000;
-    sendData(buf_2);
+    sendData(buf_2, buf_2Size);
 }
 
 /*
  * Mute
  */
 void QN8006Radio::mute() {
-    byte buf[2];
+    int bufSize = 2;
+    byte buf[bufSize];
     buf[0] = 0x00; // Register `SYSTEM1` with address `00h`
     buf[1] =0b10001000;
-    sendData(buf);
+    sendData(buf, bufSize);
     //Serial.println("mute");
 }
 
@@ -44,10 +47,11 @@ void QN8006Radio::mute() {
  * Unmute
  */
 void QN8006Radio::unmute() {
-    byte buf[2];
+    int bufSize = 2;
+    byte buf[bufSize];
     buf[0] = 0x00; // Register `SYSTEM1` with address `00h`
     buf[1] = 0b10000001;
-    sendData(buf);
+    sendData(buf, bufSize);
     //Serial.println("unmute");
 }
 
@@ -95,32 +99,41 @@ void QN8006Radio::searchUp(unsigned char *stat){
 /*
  * Initiate transmit mode
  */
-void QN8006Radio::initTransmit(byte mode) {
-    byte buf[3];
+void QN8006Radio::initTransmit(bool mode) {
+    int bufSize = 3;
+    byte buf[bufSize];
     buf[0] = 0x00; // Register `SYSTEM1` with address `00h`
     buf[1] = 0b01000001; // Enter Transmitting mode.
-    if (mode) buf[2] = 0b00001011; // Set STEREO & set IDLE to infinity (never go to Standby)
+	// Pre-emphasis and de-emphasis time constant: (µs) 50
+	if (mode == true) buf[2] = 0b00000011; // Set STEREO & set IDLE to infinity (never go to Standby)
+    else buf[2] = 0b00010011; // Set MONO & set IDLE to infinity (never go to Standby)
+	/*
+	// Pre-emphasis and de-emphasis time constant: (µs) 75
+    if (mode == true) buf[2] = 0b00001011; // Set STEREO & set IDLE to infinity (never go to Standby)
     else buf[2] = 0b00011011; // Set MONO & set IDLE to infinity (never go to Standby)
-    sendData(buf);
+	*/
+    sendData(buf, bufSize);
 }
 
 /*
  * Set transmit output power
  */
 void QN8006Radio::setOutputPower(byte output_power) {
-    byte buf[2];
+    int bufSize = 2;
+    byte buf[bufSize];
     buf[0] = 0x0c; // Register `PAC_TARGET` with address `0ch`. Output power calibration control
     buf[1] = output_power;
-    sendData(buf);
+    sendData(buf, bufSize);
 }
 /*
  * Specify total TX frequency deviation: TX frequency deviation = 0.69 kHz*TX_FEDV. Default 108.
  */
 void QN8006Radio::setTxFrequencyDeviation(byte tx_fedv) {
-    byte buf[2];
+    int bufSize = 2;
+    byte buf[bufSize];
     buf[0] = 0x0e; // Register `TX_FDEV` with address `0eh`
     buf[1] = tx_fedv;
-    sendData(buf);
+    sendData(buf, bufSize);
 }
 
 
@@ -130,26 +143,28 @@ void QN8006Radio::setTxFrequencyDeviation(byte tx_fedv) {
  * Reset all registers to default values.
  */
 void QN8006Radio::resetDevice() {
-    byte buf[2];
+	int bufSize = 2;
+    byte buf[bufSize];
     buf[0] = 0x01; // Register `SYSTEM2` with address `01h`
     buf[1] = 0b10001001;
-    sendData(buf);
+    sendData(buf, bufSize);
 }
 
 /*
  * Set TX/RX Frequency
  */
 void QN8006Radio::setFrequency(float frequency) {
-    byte buf[2];
-    unsigned int frequencyB = (frequency*100 - 7600)/5;
+	int bufSize = 2;
+    byte buf[bufSize];
+     unsigned int frequencyB = (frequency*100 - 7600)/5;
     byte frequencyH = frequencyB >> 8;
     byte frequencyL = frequencyB & 0XFF;
     buf[0] = 0x08; // Register `CH` with address `08h` (Lower 8 bits of 10-bit channel index.)
     buf[1] = frequencyL;
-    sendData(buf);
+    sendData(buf, bufSize);
     buf[0] = 0x0b; // Register `CH_STEP` with address `0bh` (Highest 2 bits of channel indexes.)
     buf[1] = frequencyH;
-    sendData(buf);
+    sendData(buf, bufSize);
 }
 
 /*
@@ -160,10 +175,11 @@ void QN8006Radio::setCrystalCapLoad(byte cap_load) {
     if (cap_load > 0b00111111) {
         cap_load = 0b00111111;
     }
-    byte buf[2];
+	int bufSize = 2;
+    byte buf[bufSize];
     buf[0] = 0x04; // Register `REG_VGA` with address `04h`
     buf[1] = cap_load + 0b01000000;
-    sendData(buf);
+    sendData(buf, bufSize);
 }
 
 /*
@@ -193,8 +209,7 @@ int QN8006Radio::getStat(unsigned char *stat) {
 /*
  * Send data to user control registers:
  */
-void QN8006Radio::sendData(byte data[]) {
-    int dataSize = sizeof(data);
+void QN8006Radio::sendData(byte data[], int dataSize) {
     Wire.beginTransmission(_address);
     Wire.write(data, dataSize); // send data
     Wire.endTransmission();

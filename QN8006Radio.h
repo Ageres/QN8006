@@ -12,7 +12,7 @@ private:
     int _address;
     int rssi;
 
-    void sendData(byte data[]);
+    void sendData(byte data[], int dataSize);
 
 public:
     QN8006Radio();
@@ -24,7 +24,7 @@ public:
     void searchUp(unsigned char *stat);
 
     // transmitter settings
-    void initTransmit(byte mode);
+    void initTransmit(bool mode);
     void setOutputPower(byte output_power);
     void setTxFrequencyDeviation(byte tx_fedv);
 

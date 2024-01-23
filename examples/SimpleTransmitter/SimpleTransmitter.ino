@@ -29,9 +29,9 @@ Top view:
 QN8006Radio radio = QN8006Radio();
 
 byte output_power = 115; // range 0 ... 255
-byte st_mo_tx = 0;      // TX stereo (1) or mono (0) mode selection
-float frequency = 76.0; // range 76.0 ... 108.0
-byte cap_load = 25;     // range 0 ... 63, default 31, need for correct xtal frequency
+bool st_mo_tx = false;   // TX stereo (true) or mono (false) mode selection
+float frequency = 76.0;  // range 76.0 ... 108.0
+byte cap_load = 25;      // range 0 ... 63, default 31, need for correct xtal frequency
 byte tx_fedv = 110;      // range 0 ... 255, default 108
 
 void setup() {
